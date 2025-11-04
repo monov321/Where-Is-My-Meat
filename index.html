@@ -170,6 +170,17 @@
       box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
     }
 
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--soft);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--accent);
+    }
+
     .dropzone {
       border: 2px dashed rgba(255, 255, 255, 0.15);
       border-radius: 12px;
@@ -230,25 +241,49 @@
     .camera-container {
       position: relative;
       margin-top: 15px;
+      text-align: center;
     }
 
     video {
       width: 100%;
+      max-width: 500px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.1);
       background: #000;
+    }
+
+    .capture-preview {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 12px;
+      border: 2px solid var(--accent);
+      display: none;
     }
 
     .scan-overlay {
       position: absolute;
       top: 0;
-      left: 0;
+      left: 50%;
+      transform: translateX(-50%);
       width: 100%;
+      max-width: 500px;
       height: 100%;
       pointer-events: none;
-      border: 2px solid var(--accent);
+      border: 3px solid var(--accent);
       border-radius: 12px;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+    }
+
+    .scan-frame {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      height: 70%;
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      background: rgba(255, 107, 53, 0.1);
     }
 
     .scan-line {
@@ -256,14 +291,58 @@
       height: 3px;
       width: 100%;
       background: var(--accent);
-      top: 50%;
-      animation: scan 2s infinite linear;
+      top: 0;
+      animation: scan 2s infinite ease-in-out;
       box-shadow: 0 0 10px var(--accent);
     }
 
     @keyframes scan {
-      0%, 100% { top: 20%; }
-      50% { top: 80%; }
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    .camera-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .camera-controls .btn {
+      margin-top: 0;
+      flex: 1;
+      min-width: 140px;
+      max-width: 200px;
+    }
+
+    .capture-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      border: 4px solid white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 15px auto;
+      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
+      transition: var(--transition);
+    }
+
+    .capture-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(255, 107, 53, 0.6);
+    }
+
+    .capture-btn:active {
+      transform: scale(0.95);
+    }
+
+    .capture-btn i {
+      color: white;
+      font-size: 24px;
     }
 
     .ficha {
@@ -318,7 +397,7 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      margin-top: 15px;
+      margin: 15px 0;
       color: var(--accent);
       font-size: 14px;
     }
@@ -359,13 +438,13 @@
     }
 
     .status-message {
-      padding: 10px 15px;
+      padding: 12px 15px;
       border-radius: 8px;
-      margin: 10px 0;
+      margin: 15px 0;
       font-size: 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .status-success {
@@ -386,22 +465,17 @@
       border: 1px solid rgba(231, 76, 60, 0.3);
     }
 
-    .camera-controls {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
+    .status-info {
+      background: rgba(52, 152, 219, 0.1);
+      color: #3498db;
+      border: 1px solid rgba(52, 152, 219, 0.3);
     }
 
-    .camera-controls .btn {
-      margin-top: 0;
-      flex: 1;
-    }
-
-    .performance-info {
-      font-size: 12px;
-      color: var(--muted);
+    .instruction {
       text-align: center;
-      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      margin: 10px 0;
     }
 
     @media (max-width: 900px) {
@@ -433,6 +507,15 @@
 
       .camera-controls {
         flex-direction: column;
+        align-items: center;
+      }
+
+      .camera-controls .btn {
+        max-width: 100%;
+      }
+
+      video, .capture-preview {
+        max-width: 100%;
       }
     }
   </style>
@@ -466,33 +549,50 @@
       <div class="or">o</div>
 
       <button id="startCamera" class="btn">
-        <i class="fas fa-video"></i> Usar cámara
+        <i class="fas fa-video"></i> Activar Cámara
       </button>
 
-      <div id="cameraContainer" class="camera-container" hidden>
-        <video id="video" autoplay playsinline></video>
-        <div class="scan-overlay" hidden>
-          <div class="scan-line"></div>
+      <div id="cameraSection" style="display: none;">
+        <div class="instruction">
+          <i class="fas fa-info-circle"></i> Enfoca el código QR y toma una foto
         </div>
-        <canvas id="videoCanvas" hidden></canvas>
         
+        <div class="camera-container">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="videoCanvas" style="display: none;"></canvas>
+          
+          <div class="scan-overlay">
+            <div class="scan-frame">
+              <div class="scan-line"></div>
+            </div>
+          </div>
+
+          <div class="capture-btn" id="captureBtn">
+            <i class="fas fa-camera"></i>
+          </div>
+
+          <img id="capturePreview" class="capture-preview" alt="Vista previa">
+        </div>
+
         <div class="camera-controls">
-          <button id="switchCamera" class="btn ghost" hidden>
-            <i class="fas fa-sync-alt"></i> Cambiar cámara
+          <button id="retakeBtn" class="btn btn-secondary" style="display: none;">
+            <i class="fas fa-redo"></i> Volver a Tomar
+          </button>
+          <button id="switchCamera" class="btn btn-secondary">
+            <i class="fas fa-sync-alt"></i> Cambiar Cámara
           </button>
           <button id="stopCamera" class="btn ghost">
-            <i class="fas fa-stop"></i> Detener cámara
+            <i class="fas fa-times"></i> Cerrar Cámara
           </button>
         </div>
-      </div>
 
-      <div id="scanningIndicator" class="scanning-indicator" hidden>
-        <div class="pulse"></div>
-        Escaneando en tiempo real...
+        <div id="scanningIndicator" class="scanning-indicator">
+          <div class="pulse"></div>
+          Procesando imagen...
+        </div>
       </div>
 
       <div id="statusMessage"></div>
-      <div class="performance-info" id="performanceInfo"></div>
     </section>
 
     <section class="card">
@@ -515,43 +615,38 @@
     const dropzone = document.getElementById("dropzone");
     const fileInput = document.getElementById("fileInput");
     const ficha = document.getElementById("ficha");
-    const scanningIndicator = document.getElementById("scanningIndicator");
     const statusMessage = document.getElementById("statusMessage");
-    const performanceInfo = document.getElementById("performanceInfo");
-    const cameraContainer = document.getElementById("cameraContainer");
+    const cameraSection = document.getElementById("cameraSection");
+    const video = document.getElementById("video");
+    const videoCanvas = document.getElementById("videoCanvas");
+    const captureBtn = document.getElementById("captureBtn");
+    const capturePreview = document.getElementById("capturePreview");
+    const retakeBtn = document.getElementById("retakeBtn");
+    const scanningIndicator = document.getElementById("scanningIndicator");
 
     const startCamera = document.getElementById("startCamera");
     const stopCamera = document.getElementById("stopCamera");
     const switchCamera = document.getElementById("switchCamera");
-    const video = document.getElementById("video");
-    const videoCanvas = document.getElementById("videoCanvas");
-    const scanOverlay = document.querySelector('.scan-overlay');
+
     const vctx = videoCanvas.getContext("2d");
 
     // Variables de estado
     let camStream = null;
-    let scanLoop = null;
     let currentFacingMode = 'environment';
-    let lastScanTime = 0;
-    let scanCount = 0;
-    let successCount = 0;
-    let isScanning = false;
+    let isCameraActive = false;
 
-    // Configuración de rendimiento
-    const SCAN_INTERVAL = 300; // ms entre escaneos
-    const MAX_SCAN_TIME = 10000; // 10 segundos máximo de escaneo continuo
-    const PERFORMANCE_THRESHOLD = 16; // ms por frame máximo
-
+    // Mostrar mensaje de estado
     function showStatus(message, type = 'info') {
       const types = {
         success: 'status-success',
         warning: 'status-warning',
-        error: 'status-error'
+        error: 'status-error',
+        info: 'status-info'
       };
       
       statusMessage.innerHTML = `
-        <div class="status-message ${types[type] || 'status-warning'}">
-          <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+        <div class="status-message ${types[type] || 'status-info'}">
+          <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
           ${message}
         </div>
       `;
@@ -561,16 +656,7 @@
       statusMessage.innerHTML = '';
     }
 
-    function updatePerformanceInfo(scanTime) {
-      const fps = scanTime > 0 ? Math.round(1000 / scanTime) : 0;
-      const successRate = scanCount > 0 ? Math.round((successCount / scanCount) * 100) : 0;
-      
-      performanceInfo.innerHTML = `
-        Escaneos: ${scanCount} | Éxitos: ${successRate}% | FPS: ${fps}
-        ${scanTime > PERFORMANCE_THRESHOLD ? '⚠️ Rendimiento bajo' : '✅ Rendimiento óptimo'}
-      `;
-    }
-
+    // Mostrar datos del QR
     function showData(raw) {
       ficha.innerHTML = "";
       ficha.classList.remove("empty");
@@ -588,54 +674,40 @@
             ${json.peso_kg ? `<p><strong>Peso:</strong> ${json.peso_kg} kg</p>` : ''}
             ${json.lote ? `<p><strong>Lote:</strong> ${json.lote}</p>` : ''}
             ${json.calidad ? `<p><strong>Calidad:</strong> ${json.calidad}</p>` : ''}
+            ${json.origen ? `<p><strong>Origen:</strong> ${json.origen}</p>` : ''}
           </div>
         `;
         
         showStatus('✅ Código QR escaneado correctamente', 'success');
-        stopCam(); // Detener cámara después de escanear exitosamente
         
       } catch (error) {
         ficha.innerHTML = `
           <div class="ficha-content">
             <p><strong>Contenido del QR:</strong></p>
-            <pre style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; overflow: auto;">${raw}</pre>
+            <pre style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; overflow: auto; max-height: 200px;">${raw}</pre>
           </div>
         `;
         showStatus('⚠️ QR escaneado pero formato no reconocido', 'warning');
       }
     }
 
-    function decode(img) {
-      const startTime = performance.now();
-      
+    // Decodificar QR
+    function decode(imageData) {
       try {
-        const c = document.createElement("canvas");
-        const ctx = c.getContext("2d");
-        c.width = img.width;
-        c.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        const d = ctx.getImageData(0, 0, img.width, img.height);
-        const qr = jsQR(d.data, img.width, img.height);
-        
-        scanCount++;
-        const scanTime = performance.now() - startTime;
+        const qr = jsQR(imageData.data, imageData.width, imageData.height);
         
         if (qr) {
-          successCount++;
           showData(qr.data);
           return true;
         }
-        
-        updatePerformanceInfo(scanTime);
         return false;
-        
       } catch (error) {
         console.error('Error en decodificación:', error);
         return false;
       }
     }
 
-    // Eventos para subida de archivos
+    // Subida de archivos
     dropzone.addEventListener("click", () => fileInput.click());
 
     dropzone.addEventListener("dragover", e => {
@@ -671,62 +743,63 @@
       const img = new Image();
       img.onload = () => {
         clearStatus();
-        if (!decode(img)) {
-          showStatus('⚠️ No se detectó un código QR válido en la imagen', 'error');
-        }
+        scanningIndicator.style.display = 'flex';
+        
+        // Crear canvas temporal para procesar la imagen
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        setTimeout(() => {
+          if (!decode(imageData)) {
+            showStatus('⚠️ No se detectó un código QR válido en la imagen', 'error');
+          }
+          scanningIndicator.style.display = 'none';
+        }, 500);
       };
       img.onerror = () => {
         showStatus('❌ Error al cargar la imagen', 'error');
+        scanningIndicator.style.display = 'none';
       };
       img.src = URL.createObjectURL(file);
     }
 
-    // Funciones de cámara mejoradas
+    // Funciones de cámara
     async function getCameraStream(facingMode = 'environment') {
       const constraints = {
         video: {
           facingMode: facingMode,
           width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30 }
+          height: { ideal: 720 }
         }
       };
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        return stream;
+        return await navigator.mediaDevices.getUserMedia(constraints);
       } catch (error) {
-        // Fallback a configuración más básica
-        const fallbackConstraints = {
-          video: {
-            facingMode: facingMode
-          }
-        };
-        
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-          return stream;
-        } catch (fallbackError) {
-          throw new Error(`No se pudo acceder a la cámara: ${fallbackError.message}`);
-        }
+        // Fallback a configuración básica
+        const fallbackConstraints = { video: { facingMode: facingMode } };
+        return await navigator.mediaDevices.getUserMedia(fallbackConstraints);
       }
     }
 
     async function startCam() {
       try {
-        showStatus('🔄 Iniciando cámara...', 'warning');
+        showStatus('🔄 Activando cámara...', 'info');
         startCamera.disabled = true;
 
         camStream = await getCameraStream(currentFacingMode);
         
         video.srcObject = camStream;
-        cameraContainer.hidden = false;
-        scanningIndicator.hidden = false;
-        scanOverlay.hidden = false;
-        switchCamera.hidden = !isMobile() || !hasMultipleCameras();
+        cameraSection.style.display = 'block';
+        scanningIndicator.style.display = 'none';
         
-        startCamera.hidden = true;
-        clearStatus();
+        startCamera.style.display = 'none';
+        isCameraActive = true;
 
         // Esperar a que el video esté listo
         await new Promise((resolve) => {
@@ -735,35 +808,31 @@
           };
         });
 
-        startScanLoop();
+        showStatus('✅ Cámara activada. Enfoca el código QR y toma una foto.', 'success');
         
       } catch (err) {
         console.error('Error al iniciar cámara:', err);
-        showStatus(`❌ ${err.message}`, 'error');
+        showStatus(`❌ No se pudo acceder a la cámara: ${err.message}`, 'error');
         startCamera.disabled = false;
       }
     }
 
     function stopCam() {
-      if (scanLoop) {
-        cancelAnimationFrame(scanLoop);
-        scanLoop = null;
-      }
-      
       if (camStream) {
         camStream.getTracks().forEach(track => track.stop());
         camStream = null;
       }
       
-      cameraContainer.hidden = true;
-      scanningIndicator.hidden = true;
-      scanOverlay.hidden = true;
-      startCamera.hidden = false;
+      cameraSection.style.display = 'none';
+      startCamera.style.display = 'block';
       startCamera.disabled = false;
-      isScanning = false;
+      capturePreview.style.display = 'none';
+      video.style.display = 'block';
+      retakeBtn.style.display = 'none';
+      captureBtn.style.display = 'flex';
+      isCameraActive = false;
       
       clearStatus();
-      performanceInfo.innerHTML = '';
     }
 
     async function switchCameraFn() {
@@ -777,89 +846,73 @@
       startCam();
     }
 
-    function startScanLoop() {
-      isScanning = true;
-      lastScanTime = performance.now();
-      scanCount = 0;
-      successCount = 0;
+    // Capturar foto
+    function capturePhoto() {
+      if (!isCameraActive) return;
+
+      // Configurar canvas con las dimensiones del video
+      videoCanvas.width = video.videoWidth;
+      videoCanvas.height = video.videoHeight;
+      vctx.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
       
-      function scan() {
-        if (!isScanning) return;
-        
-        const currentTime = performance.now();
-        const timeSinceLastScan = currentTime - lastScanTime;
-        
-        // Control de frecuencia de escaneo para mejor rendimiento
-        if (timeSinceLastScan >= SCAN_INTERVAL && video.readyState === video.HAVE_ENOUGH_DATA) {
-          try {
-            videoCanvas.width = video.videoWidth;
-            videoCanvas.height = video.videoHeight;
-            vctx.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
-            
-            const d = vctx.getImageData(0, 0, videoCanvas.width, videoCanvas.height);
-            const qr = jsQR(d.data, videoCanvas.width, videoCanvas.height);
-            
-            if (qr) {
-              showData(qr.data);
-              return; // Salir del loop después de escanear exitosamente
-            }
-            
-            lastScanTime = currentTime;
-            
-            // Timeout de seguridad
-            if (currentTime - lastScanTime > MAX_SCAN_TIME) {
-              showStatus('⏰ Tiempo de escaneo agotado. Intenta de nuevo.', 'warning');
-              stopCam();
-              return;
-            }
-            
-          } catch (error) {
-            console.error('Error en escaneo:', error);
+      // Mostrar vista previa
+      capturePreview.src = videoCanvas.toDataURL('image/png');
+      capturePreview.style.display = 'block';
+      video.style.display = 'none';
+      retakeBtn.style.display = 'block';
+      captureBtn.style.display = 'none';
+      
+      // Procesar la imagen capturada
+      processCapturedImage();
+    }
+
+    function processCapturedImage() {
+      scanningIndicator.style.display = 'flex';
+      showStatus('🔍 Procesando imagen...', 'info');
+
+      setTimeout(() => {
+        try {
+          const imageData = vctx.getImageData(0, 0, videoCanvas.width, videoCanvas.height);
+          
+          if (decode(imageData)) {
+            // Éxito - el QR fue decodificado y mostrado en showData()
+          } else {
+            showStatus('❌ No se detectó un código QR en la foto. Intenta de nuevo.', 'error');
+            retakePhoto();
           }
+        } catch (error) {
+          showStatus('❌ Error al procesar la imagen', 'error');
+          retakePhoto();
+        } finally {
+          scanningIndicator.style.display = 'none';
         }
-        
-        scanLoop = requestAnimationFrame(scan);
-      }
-      
-      scanLoop = requestAnimationFrame(scan);
+      }, 1000);
     }
 
-    // Utilidades
-    function isMobile() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    }
-
-    async function hasMultipleCameras() {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        return videoDevices.length > 1;
-      } catch {
-        return false;
-      }
+    function retakePhoto() {
+      capturePreview.style.display = 'none';
+      video.style.display = 'block';
+      retakeBtn.style.display = 'none';
+      captureBtn.style.display = 'flex';
+      clearStatus();
     }
 
     // Event listeners
     startCamera.addEventListener("click", startCam);
     stopCamera.addEventListener("click", stopCam);
     switchCamera.addEventListener("click", switchCameraFn);
+    captureBtn.addEventListener("click", capturePhoto);
+    retakeBtn.addEventListener("click", retakePhoto);
 
     // Limpieza al cerrar la página
     window.addEventListener('beforeunload', () => {
-      stopCam();
-    });
-
-    // Manejo de visibilidad de página para optimizar rendimiento
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && isScanning) {
-        cancelAnimationFrame(scanLoop);
-      } else if (!document.hidden && isScanning && camStream) {
-        startScanLoop();
+      if (camStream) {
+        camStream.getTracks().forEach(track => track.stop());
       }
     });
 
-    // Mensaje inicial de bienvenida
-    showStatus('👆 Selecciona una imagen o usa la cámara para escanear un código QR', 'warning');
+    // Mensaje inicial
+    showStatus('👆 Selecciona una imagen o activa la cámara para escanear un código QR', 'info');
 
   </script>
 </body>
